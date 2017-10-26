@@ -29,7 +29,7 @@ if [ "$1" == "PDX_DAVE" ]; then
     echo $3
     echo $4
    # hisat2 -p 12 --dta -x $HOME/Genome/GRCh38/Hisat/grch38_tran/grch38_tran -1 $3 -2 $4 -S $1/$2/Aligned.out.sam
-   kallisto quant -t 8 -i $HOME/Genome/hg38/kallisto_hg38.idx -o $1/$2 $3 $4
+   kallisto quant -t 8 -i /mnt/work1/users/bhklab/Users/zhaleh/hg38/kallisto_hg38.idx -o $1/$2 $3 $4
 fi
 
 if [ "$1" == "GNE" ]; then
@@ -39,7 +39,7 @@ if [ "$1" == "GNE" ]; then
     echo $3
     echo $4
    # hisat2 -p 12 --dta -x $HOME/Genome/GRCh38/Hisat/grch38_tran/grch38_tran -1 $3 -2 $4 -S $1/$2/Aligned.out.sam
-   kallisto quant -t 8 -i $HOME/Genome/hg38/kallisto_hg38.idx -o $1/$2 $3 $4
+   kallisto quant -t 8 -i /mnt/work1/users/bhklab/Users/zhaleh/hg38/kallisto_hg38.idx -o $1/$2 $3 $4
 fi
 
 if [ "$1" == "UHN" ]; then
@@ -50,7 +50,7 @@ if [ "$1" == "UHN" ]; then
     echo $4
 
    # hisat2 -p 12 --dta -x $HOME/Genome/GRCh38/Hisat/grch38_tran/grch38_tran -1 $3 -2 $4 -S $1/$2/Aligned.out.sam
-   kallisto quant -t 8  -i $HOME/Genome/hg38/kallisto_hg38.idx -o $1/$2 $3 $4
+   kallisto quant -t 8  -i /mnt/work1/users/bhklab/Users/zhaleh/hg38/kallisto_hg38.idx -o $1/$2 $3 $4
 
 fi
 
@@ -63,7 +63,7 @@ if [ "$1" == "CCLE" ]; then
 	java -Xmx16g -jar $picard_dir/picard.jar SamToFastq  I=$3 FASTQ=$1/$2/first.fastq SECOND_END_FASTQ=$1/$2/second.fastq
 	echo "Running kallisto"
 	#hisat2 -p 12 --dta -x $HOME/Genome/GRCh38/Hisat/grch38_tran/grch38_tran -1 $1/$2/first.fastq -2 $1/$2/second.fastq -S $1/$2/Aligned.out.sam
-	kallisto quant -t 8  -i $HOME/Genome/hg38/kallisto_hg38.idx -o $1/$2 $1/$2/first.fastq $1/$2/second.fastq
+	kallisto quant -t 8  -i /mnt/work1/users/bhklab/Users/zhaleh/hg38/kallisto_hg38.idx -o $1/$2 $1/$2/first.fastq $1/$2/second.fastq
 	rm $1/$2/first.fastq
 	rm $1/$2/second.fastq
 fi
@@ -78,7 +78,7 @@ if [ "$1" == "GRAY" ]; then
 	echo $2_2.fastq
 	echo "Running kallisto"
 	#hisat2 -p 12 --dta -x $HOME/Genome/GRCh38/Hisat/grch38_tran/grch38_tran -1 $1/$2/$2_1.fastq -2 $1/$2/$2_2.fastq -S $1/$2/Aligned.out.sam
-	kallisto quant -t 8  -i $HOME/Genome/hg38/kallisto_hg38.idx -o $1/$2 $1/$2/$2_1.fastq $1/$2/$2_2.fastq		
+	kallisto quant -t 8  -i /mnt/work1/users/bhklab/Users/zhaleh/hg38/kallisto_hg38.idx -o $1/$2 $1/$2/$2_1.fastq $1/$2/$2_2.fastq
 	rm $1/$2/$2_1.fastq
 	rm $1/$2/$2_2.fastq
 fi
@@ -99,7 +99,7 @@ if [ "$1" == "GEO" ]; then
 	echo $3_2.fastq
 	echo "Running kallisto"
 	#hisat2 -p 12 --dta -x $HOME/Genome/GRCh38/Hisat/grch38_tran/grch38_tran -1 $1/$2/$2_1.fastq -2 $1/$2/$2_2.fastq -S $1/$2/Aligned.out.sam
-	kallisto quant -t 8  -i $HOME/Genome/hg38/kallisto_hg38.idx -o $1/$2/$3 $1/$2/$3/$3_1.fastq $1/$2/$3/$3_2.fastq		
+	kallisto quant -t 8  -i /mnt/work1/users/bhklab/Users/zhaleh/hg38/kallisto_hg38.idx -o $1/$2/$3 $1/$2/$3/$3_1.fastq $1/$2/$3/$3_2.fastq		
 	rm $1/$2/$3/$3_1.fastq
 	rm $1/$2/$3/$3_2.fastq
 fi
