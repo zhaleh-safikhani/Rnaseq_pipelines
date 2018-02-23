@@ -56,9 +56,6 @@ date
 
 if [ ${input_file: -4} == ".bam" ]; then
 	echo "Running picard"
-  echo $study_name
-  echo $sample_name
-  echo $inpute_file
   module load picard  
   java -Xmx16g -jar $picard_dir/picard.jar SamToFastq  I=$inpute_file FASTQ=$study_name/$sample_name/$sample_name_1.fastq SECOND_END_FASTQ=$study_name/$sample_name/$sample_name_2.fastq
   first_fastq=$study_name/$sample_name/$sample_name_1.fastq
@@ -68,10 +65,6 @@ fi
 
 if [ ${input_file: -4} == ".sra" ]; then
   echo"Running fastq-dump"
-  echo $study_name
-  echo $sample_name
-  echo $inpute_file
-
 	fastq-dump --split-files $inpute_file --outdir $study_name/$sample_name/
   first_fastq=$study_name/$sample_name/$sample_name_1.fastq
   second_fastq=$study_name/$sample_name/$sample_name_2.fastq
@@ -79,51 +72,40 @@ if [ ${input_file: -4} == ".sra" ]; then
 fi
 
 date
-if $alignment_flag; then
-  echo "Running kallisto"
-  echo $study_name
-  echo $sample_name
-  echo $first_fastq
-  echo $second_fastq
-  kallisto quant -t 8 -i $kallisto_index -o $study_name/$sample_name $first_fastq $second_fastq
-else if [$alignment_tool == "HISAT"]; then
+if !$alignment_flag; then
+  if [$alignment_tool == "HISAT"]; then
   echo "Running HISAT2"
   module load hisat2/2.0.5
   hisat2 -p 12 --dta -x /mnt/work1/users/bhklab/Users/zhaleh/Genome/GRCh38/Hisat/grch38_tran/grch38_tran -1 $first_fastq -2 $second_fastq -S $study_name/$sample_name/Aligned.out.sam
-else if [$alignment_tool == "STAR"]; then
-# sh ./star_indexing $star_index $annotation $read_length
-  sh ./star.sh $star_index $first_fastq $second_fastq $study_name/$sample_name
+  else if [$alignment_tool == "STAR"]; then
+  # sh ./star_indexing $star_index $annotation $read_length
+    sh ./star.sh $star_index $first_fastq $second_fastq $study_name/$sample_name
 fi
 
 date
-if [$quant_tool == "KALLISTO"; then
+if [$quant_tool == "KALLISTO"]; then
   module load kallisto/0.43.1
   echo "Running kallisto"
-  echo $study_name
-  echo $sample_name
-  echo $first_fastq
-  echo $second_fastq
   kallisto quant -t 8 -i  -o $study_name/$sample_name $first_fastq $second_fastq
-else if [$quant_tool == "SALMON"; then
+else if [$quant_tool == "SALMON"]; then
   echo "Running salmon"
-  echo $study_name
-  echo $sample_name
-  echo $first_fastq
-  echo $second_fastq
-else if [$quant_tool == "STRINGTIE"; then
-  module load stringtie/1.3.1c
+  module load salmon/0.8.2
+  ##export LD_LIBRARY_PATH=/mnt/work1/software/bowtie2/2.3.0:$LD_LIBRARY_PATH
+  #salmon index -t /mnt/work1/users/home2/zsaikhan/Genome/GRCh38/Ensembl/v90/Homo_sapiens.GRCh38.cdna.all.fa.gz -i /mnt/work1/users/home2/zsaikhan/Genome/GRCh38/salmon_index
+  salmon quant -i /mnt/work1/users/bhklab/Users/zhaleh/Genome/GRCh38/Gencode/v23/salmon_index -l A \
+  -1 $first_fastq \
+  -2 /$second_fastq \
+  -p 8 -o $study_name/$sample_name
+  else if [$quant_tool == "STRINGTIE"]; then
+    module load stringtie/1.3.1c
 
   echo "Sort and Convert Sam file to bam"
   samtools sort -@ 8 -o $study_name/$sample_name/Aligned.out.sorted.bam $study_name/$sample_name/Aligned.out.sam
   echo "Running stringtie"
   date
   stringtie $study_name/$sample_name/Aligned.out.sorted.bam -v -o $study_name/$sample_name/stringtie_output.gtf -A $study_name/$sample_name/gene_abund.tab -p 8 -G $annotation
-else if [$quant_tool == "CUFFLINKS"; then
+else if [$quant_tool == "CUFFLINKS"]; then
   echo "Running cufflinks"
-  echo $study_name
-  echo $sample_name
-  echo $first_fastq
-  echo $second_fastq
 fi
 date
 
