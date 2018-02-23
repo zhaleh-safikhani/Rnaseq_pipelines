@@ -24,7 +24,7 @@ salmon_index="/mnt/work1/users/bhklab/Users/zhaleh/Genome/GRCh38/Gencode/v23/sal
 annotation="/mnt/work1/users/bhklab/Users/zhaleh/Genome/GRCh38/Gencode/gencode.v26.annotation.gtf"
 read_length=75 #read length - 1
 
-if [ $# -eq 5 ]; then
+if [ $# -eq 8 ]; then
   study_name=$1
   sample_name=$2
   first_fastq=$3
@@ -34,7 +34,7 @@ if [ $# -eq 5 ]; then
   alignment_tool=$7
   quant_tool=$8
   echo "running pipeline with arguments   $study_name $sample_name $first_fastq $second_fastq $output_dir $alignment_flag $alignment_tool $quant_tool"
-else
+elif [ $# -eq 7 ]; then
   study_name=$1
   sample_name=$2
   input_file=$3
@@ -43,6 +43,8 @@ else
   alignment_tool=$6
   quant_tool=$7
   echo "running pipeline with arguments   $study_name $sample_name $output_dir $alignment_flag $alignment_tool $quant_tool"
+else 
+  echo "set all the required arguments"
 fi
 
 if [ ! -d "$output_dir/$study_name/$sample_name" ]; then
@@ -96,12 +98,12 @@ if !$alignment_flag; then
     samtools sort -@ 8 \
     -o $output_dir/$study_name/$sample_name/aligned_out_sorted.bam \
     $output_dir/$study_name/$sample_name/aligned_out.sam
-  else if [$alignment_tool == "STAR"]; then
+  elif [$alignment_tool == "STAR"]; then
     echo "Running star"
     
   # sh ./star_indexing $star_index $annotation $read_length
     sh ./star.sh $star_index $first_fastq $second_fastq $output_dir/$study_name/$sample_name
-  else if [$alignment_tool == "TOPHAT"]; then
+  elif [$alignment_tool == "TOPHAT"]; then
     echo "Running tophat"
 
     module load igenome-human/GRCh37
@@ -126,7 +128,7 @@ if [$quant_tool == "KALLISTO"]; then
   -i  \
   -o $output_dir/$study_name/$sample_name \
   $first_fastq $second_fastq
-else if [$quant_tool == "SALMON"]; then
+elif [$quant_tool == "SALMON"]; then
   echo "Running salmon"
   
   module load salmon/0.8.2
@@ -136,7 +138,7 @@ else if [$quant_tool == "SALMON"]; then
   -1 $first_fastq \
   -2 /$second_fastq \
   -p 8 -o $output_dir/$study_name/$sample_name
-else if [$quant_tool == "STRINGTIE"]; then
+elif [$quant_tool == "STRINGTIE"]; then
   echo "Running stringtie"
 
   module load stringtie/1.3.1c
@@ -146,7 +148,7 @@ else if [$quant_tool == "STRINGTIE"]; then
   -A $output_dir/$study_name/$sample_name/gene_abund.tab \
   -p 8 \
   -G $annotation
-else if [$quant_tool == "CUFFLINKS"]; then
+elif [$quant_tool == "CUFFLINKS"]; then
   echo "Running cufflinks"
   
     module load cufflinks/2.2.1
