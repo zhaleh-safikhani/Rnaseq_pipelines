@@ -33,6 +33,7 @@ if [ $# -eq 5 ]; then
   alignment_flag=$6 #for kallisto alignment flag set to FALSE else set to TRUE
   alignment_tool=$7
   quant_tool=$8
+  echo "running pipeline with arguments   $study_name $sample_name $first_fastq $second_fastq $output_dir $alignment_flag $alignment_tool $quant_tool"
 else
   study_name=$1
   sample_name=$2
@@ -41,17 +42,11 @@ else
   alignment_flag=$5 #for kallisto alignment flag set to FALSE else set to TRUE
   alignment_tool=$6
   quant_tool=$7
+  echo "running pipeline with arguments   $study_name $sample_name $output_dir $alignment_flag $alignment_tool $quant_tool"
 fi
 
-
-# Navigate to file
-if [ ! -d $output_dir ]; then
-  mkdir  $output_dir
-fi
-
-cd  $5
-if [ ! -d "$study_name/$sample_name" ]; then
-	mkdir -p $study_name/$sample_name
+if [ ! -d "$output_dir/$study_name/$sample_name" ]; then
+	mkdir -p $output_dir/$study_name/$sample_name
 fi
 date
 
@@ -62,11 +57,11 @@ if [ ${input_file: -4} == ".bam" ]; then
   java -Xmx16g -jar \
   $picard_dir/picard.jar SamToFastq  \
   I=$inpute_file \
-  FASTQ=$study_name/$sample_name/$sample_name_1.fastq \
-  SECOND_END_FASTQ=$study_name/$sample_name/$sample_name_2.fastq
+  FASTQ=$output_dir/$study_name/$sample_name/$sample_name_1.fastq \
+  SECOND_END_FASTQ=$output_dir/$study_name/$sample_name/$sample_name_2.fastq
   
-  first_fastq=$study_name/$sample_name/$sample_name_1.fastq
-  second_fastq=$study_name/$sample_name/$sample_name_2.fastq
+  first_fastq=$output_dir/$study_name/$sample_name/$sample_name_1.fastq
+  second_fastq=$output_dir/$study_name/$sample_name/$sample_name_2.fastq
   fastq_rm=TRUE
 fi
 
@@ -75,10 +70,10 @@ if [ ${input_file: -4} == ".sra" ]; then
   
 	fastq-dump \
 	--split-files $inpute_file \
-	--outdir $study_name/$sample_name/
+	--outdir $output_dir/$study_name/$sample_name/
 	
-  first_fastq=$study_name/$sample_name/$sample_name_1.fastq
-  second_fastq=$study_name/$sample_name/$sample_name_2.fastq
+  first_fastq=$output_dir/$study_name/$sample_name/$sample_name_1.fastq
+  second_fastq=$output_dir/$study_name/$sample_name/$sample_name_2.fastq
   fastq_rm=TRUE
 fi
 
@@ -94,31 +89,31 @@ if !$alignment_flag; then
     -x /mnt/work1/users/bhklab/Users/zhaleh/Genome/GRCh38/Hisat/grch38_tran/grch38_tran \
     -1 $first_fastq \
     -2 $second_fastq \
-    -S $study_name/$sample_name/aligned_out.sam
+    -S $output_dir/$study_name/$sample_name/aligned_out.sam
     
     date
     echo "Running samtools sort"
     samtools sort -@ 8 \
-    -o $study_name/$sample_name/aligned_out_sorted.bam \
-    $study_name/$sample_name/aligned_out.sam
+    -o $output_dir/$study_name/$sample_name/aligned_out_sorted.bam \
+    $output_dir/$study_name/$sample_name/aligned_out.sam
   else if [$alignment_tool == "STAR"]; then
     echo "Running star"
     
   # sh ./star_indexing $star_index $annotation $read_length
-    sh ./star.sh $star_index $first_fastq $second_fastq $study_name/$sample_name
+    sh ./star.sh $star_index $first_fastq $second_fastq $output_dir/$study_name/$sample_name
   else if [$alignment_tool == "TOPHAT"]; then
     echo "Running tophat"
 
     module load igenome-human/GRCh37
     module load tophat2/2.0.12
     tophat2 $BOWTIE2INDEX $first_fastq $second_fastq\
-    --output-dir $study_name/$sample_name \
+    --output-dir $output_dir/$study_name/$sample_name \
     --num-threads 8 \
     --mate-inner-dist 150 \ 
     --mate-std-dev 50 \ 
     --GTF $annotation \
-    --transcriptome-index $study_name/$sample_name/annotation 
-    mv $study_name/$sample_name/accepted_hits.bam $study_name/$sample_name/aligned_out_sorted.bam
+    --transcriptome-index $output_dir/$study_name/$sample_name/annotation 
+    mv $output_dir/$study_name/$sample_name/accepted_hits.bam $output_dir/$study_name/$sample_name/aligned_out_sorted.bam
 fi
 
 date
@@ -129,7 +124,7 @@ if [$quant_tool == "KALLISTO"]; then
   kallisto quant \
   -t 8 \
   -i  \
-  -o $study_name/$sample_name \
+  -o $output_dir/$study_name/$sample_name \
   $first_fastq $second_fastq
 else if [$quant_tool == "SALMON"]; then
   echo "Running salmon"
@@ -140,27 +135,27 @@ else if [$quant_tool == "SALMON"]; then
   salmon quant -i $salmon_index -l A \
   -1 $first_fastq \
   -2 /$second_fastq \
-  -p 8 -o $study_name/$sample_name
+  -p 8 -o $output_dir/$study_name/$sample_name
 else if [$quant_tool == "STRINGTIE"]; then
   echo "Running stringtie"
 
   module load stringtie/1.3.1c
-  stringtie $study_name/$sample_name/Aligned.out.sorted.bam \
+  stringtie $output_dir/$study_name/$sample_name/aligned_out_sorted.bam \
   -v \
-  -o $study_name/$sample_name/stringtie_output.gtf \
-  -A $study_name/$sample_name/gene_abund.tab \
+  -o $output_dir/$study_name/$sample_name/stringtie_output.gtf \
+  -A $output_dir/$study_name/$sample_name/gene_abund.tab \
   -p 8 \
   -G $annotation
 else if [$quant_tool == "CUFFLINKS"]; then
   echo "Running cufflinks"
   
     module load cufflinks/2.2.1
-    cufflinks $study_name/$sample_name/aligned_out_sorted.bam \
+    cufflinks $output_dir/$study_name/$sample_name/aligned_out_sorted.bam \
     --no-update-check \
     -N \
     -p 8 \
     -G $GTF \
-    -o $study_name/$sample_name
+    -o $output_dir/$study_name/$sample_name
   fi
 fi
 date
@@ -171,13 +166,14 @@ if $fastq_rm; then
 fi
 date
 echon "COMPLETE"
-#stringtie $study_name/$sample_name/Aligned.out.sorted.bam -v -o $study_name/$sample_name/ballgown/stringtie_output.gtf -e -B -p 8 -G $HOME/Genome/GRCh38/Gencode/gencode.v26.annotation.gtf
-#stringtie $study_name/$sample_name/Aligned.out.sorted.bam -v -o $study_name/$sample_name/test/stringtie_output.gtf -p 8 -G $HOME/Genome/GRCh38/Gencode/gencode.v26.annotation.gtf
+
+#stringtie $output_dir/$study_name/$sample_name/Aligned.out.sorted.bam -v -o $output_dir/$study_name/$sample_name/ballgown/stringtie_output.gtf -e -B -p 8 -G $HOME/Genome/GRCh38/Gencode/gencode.v26.annotation.gtf
+#stringtie $output_dir/$study_name/$sample_name/Aligned.out.sorted.bam -v -o $output_dir/$study_name/$sample_name/test/stringtie_output.gtf -p 8 -G $HOME/Genome/GRCh38/Gencode/gencode.v26.annotation.gtf
 #date
 
 #echo "Running Rail-rna"
 #module load igenome-human/hg38
 #module load python/2.7
-#rail-rna go local -x $IGENOME_HUMAN_BOWTIEINDEX $IGENOME_HUMAN_BOWTIE2INDEX -m $study_name/$sample_name/manifest -o $study_name/$sample_name/recount2 -d tsv,bw,jx -p 8 --scratch /mnt/work1/users/home2/zsaikhan/bhklab.home/temp_rail
-#rm $study_name/$sample_name/*.sam
+#rail-rna go local -x $IGENOME_HUMAN_BOWTIEINDEX $IGENOME_HUMAN_BOWTIE2INDEX -m $output_dir/$study_name/$sample_name/manifest -o $output_dir/$study_name/$sample_name/recount2 -d tsv,bw,jx -p 8 --scratch /mnt/work1/users/home2/zsaikhan/bhklab.home/temp_rail
+#rm $output_dir/$study_name/$sample_name/*.sam
 #date
