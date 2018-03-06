@@ -80,8 +80,8 @@ if [ ${input_file: -4} == ".sra" ]; then
 fi
 
 date
-if !$alignment_flag; then
-  if [$alignment_tool == "HISAT"]; then
+if $alignment_flag; then
+  if [ $alignment_tool == "HISAT" ]; then
     echo "Running hisat2"
     
     module load hisat2/2.0.5
@@ -98,12 +98,12 @@ if !$alignment_flag; then
     samtools sort -@ 8 \
     -o $output_dir/$study_name/$sample_name/aligned_out_sorted.bam \
     $output_dir/$study_name/$sample_name/aligned_out.sam
-  elif [$alignment_tool == "STAR"]; then
+  elif [ $alignment_tool == "STAR" ]; then
     echo "Running star"
     
   # sh ./star_indexing $star_index $annotation $read_length
     sh ./star.sh $star_index $first_fastq $second_fastq $output_dir/$study_name/$sample_name
-  elif [$alignment_tool == "TOPHAT"]; then
+  elif [ $alignment_tool == "TOPHAT" ]; then
     echo "Running tophat"
 
     module load igenome-human/GRCh37
@@ -119,7 +119,7 @@ if !$alignment_flag; then
 fi
 
 date
-if [$quant_tool == "KALLISTO"]; then
+if [ $quant_tool == "KALLISTO" ]; then
   echo "Running kallisto"
 
   module load kallisto/0.43.1
@@ -128,7 +128,7 @@ if [$quant_tool == "KALLISTO"]; then
   -i  \
   -o $output_dir/$study_name/$sample_name \
   $first_fastq $second_fastq
-elif [$quant_tool == "SALMON"]; then
+elif [ $quant_tool == "SALMON" ]; then
   echo "Running salmon"
   
   module load salmon/0.8.2
@@ -138,7 +138,7 @@ elif [$quant_tool == "SALMON"]; then
   -1 $first_fastq \
   -2 /$second_fastq \
   -p 8 -o $output_dir/$study_name/$sample_name
-elif [$quant_tool == "STRINGTIE"]; then
+elif [ $quant_tool == "STRINGTIE" ]; then
   echo "Running stringtie"
 
   module load stringtie/1.3.1c
@@ -148,7 +148,7 @@ elif [$quant_tool == "STRINGTIE"]; then
   -A $output_dir/$study_name/$sample_name/gene_abund.tab \
   -p 8 \
   -G $annotation
-elif [$quant_tool == "CUFFLINKS"]; then
+elif [ $quant_tool == "CUFFLINKS" ]; then
   echo "Running cufflinks"
   
     module load cufflinks/2.2.1
