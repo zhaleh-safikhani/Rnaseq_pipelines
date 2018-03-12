@@ -10,7 +10,7 @@ options(stringsAsFactors=FALSE)
 file.name <- "/mnt/work1/users/bhklab/Users/zhaleh/kallisto.gencode.v23/tcga_Kallisto_est_counts"
 #tcga <- read.table(gzfile(file.name), header=T, row.names=1)
 library(data.table)
-#Alarm   [[[[file size: 14,813,269,044 alomist 15 GB]]]]
+message("Warning   [[[[file size: 14,813,269,044 alomist 15 GB]]]]")
 #tcga <- fread(file.name) 
 #rownames(tcga) <- tcga$sample   
 incept <- ifelse(length(grep("counts", file.name)) > 0, 1, 0.001)

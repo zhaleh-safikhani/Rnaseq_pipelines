@@ -1,0 +1,11 @@
+xena/toil index file:
+https://s3-us-west-2.amazonaws.com/cgl-pipeline-inputs/rnaseq_cgl/kallisto_hg38.idx
+v23 all version have used to create the index file:
+ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_23/gencode.v23.chr_patch_hapl_scaff.annotation.gtf.gz
+
+
+jtvivian@gmail.com :
+
+"The Synapse/S3 indices are the ones we used when processing TCGA, GTEx, and TARGET. 
+The superset is the ALL version of the gencode annotation file. Much to my chagrin, I haven't been able to locate the precise commands I used to generate the index (unlike RSEM / STAR) in my notes — a definitive science faux pas
+RC, I created a BED file from the GTF using gtf2bed, then created a transcriptome fasta for Kallisto using Bedtools getFasta. Back when I made the index, Kallisto had just come out and I think the index creation process was different and required both a GTF and a fasta, but I could be wrong."
