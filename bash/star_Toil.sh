@@ -15,9 +15,8 @@ FIRST_FASTQ=$2
 SECOND_FASTQ=$3
 OUTPUT=$4 # read length - 1
 
-if [ ! -d "$OUTPUT" ]; then
-        mkdir -p $OUTPUT
-fi
+mkdir -p $OUTPUT'/tmp'
+
 # --readFilesCommand if fastq files are gzipped: readFilesCommand gunzip -c
 # --genomeSAsparseD default value is 1 use bigger numbers than 1 to reduce ram consumption
 # --twopassMode Basic To run STAR 2-pass mapping for each sample separately
@@ -42,25 +41,26 @@ date
 echo "Running star"
 
 STAR --runMode alignReads \
---outFileNamePrefix $OUTPUT \
 --genomeDir $GENOMEDIR \
 --readFilesIn $FIRST_FASTQ $SECOND_FASTQ \
 --readFilesCommand gunzip -c \
---runThreadN 1 \
---genomeSAsparseD 2\
+--runThreadN 6 \
+--genomeSAsparseD 2 \
 --twopassMode Basic \
---outSAMprimaryFlag AllBestScore \
---outFilterIntronMotifs RemoveNoncanonical \
+--outFileNamePrefix $OUTPUT \
 --outSAMtype BAM SortedByCoordinate \
---chimSegmentMin 10 \
---chimOutType SeparateSAMold \
---outWigNorm None\
---quantMode TranscriptomeSAM GeneCounts\
---limitIObufferSize 150000000 \
---outTmpDir $OUTPUT'/tmp' \
---outReadsUnmapped Fastx \
 --outSAMunmapped Within \
---outBAMsortingThreadN 1
-
+--quantMode TranscriptomeSAM \
+--outSAMattributes NH HI AS NM MD \
+--outFilterType BySJout \
+--outFilterMultimapNmax 20 \
+--outFilterMismatchNmax 999 \
+--outFilterMismatchNoverReadLmax 0.04 \
+--alignIntronMin 20 \
+--alignIntronMax 1000000 \
+--alignMatesGapMax 1000000 \
+--alignSJoverhangMin 8 \
+--alignSJDBoverhangMin 1 \
+--sjdbScore 1
 date
 echo "Star Complete"
