@@ -3,6 +3,7 @@
 #$ -N kallisto
 #$ -o $HOME/run/logs
 #$ -e $HOME/run/logs
+
 module load samtools/1.3.1
 ##The 1.3.3b version of stringtie is installed in home directory and located in $HOME/bin
 module load igenome-human/hg38
@@ -16,13 +17,14 @@ module load igenome-human/hg38
 ## GRAY: $1 study, $2 name of sample, $3 /mnt/work1/users/bhklab/Data/Gray/rnaseq/SRP026537/$sample_name/$sample_name.sra
 ## GEO/GSE_id: $1 study, $2 SRR_id
 date
-echon "START"
+echo "START"
 
 kallisto_index="/mnt/work1/users/bhklab/Users/zhaleh/hg38/kallisto_hg38.idx"
 star_index="/mnt/work1/users/bhklab/users/zhaleh/GRCh37_STAR_v12"
 salmon_index="/mnt/work1/users/bhklab/Users/zhaleh/Genome/GRCh38/Gencode/v23/salmon_index"
 annotation="/mnt/work1/users/bhklab/Users/zhaleh/Genome/GRCh38/Gencode/gencode.v26.annotation.gtf"
 read_length=75 #read length - 1
+fastq_rm=false
 
 if [ $# -eq 8 ]; then
   study_name=$1
@@ -30,29 +32,25 @@ if [ $# -eq 8 ]; then
   first_fastq=$3
   second_fastq=$4
   output_dir=$5
-  alignment_flag=$6 #for kallisto alignment flag set to FALSE else set to TRUE
+  alignment_flag=$6 #for kallisto alignment flag set to false else set to true
   alignment_tool=$7
   quant_tool=$8
+  echo "8"
+  echo "$quant_tool"
   echo "running pipeline with arguments   $study_name $sample_name $first_fastq $second_fastq $output_dir $alignment_flag $alignment_tool $quant_tool"
 elif [ $# -eq 7 ]; then
   study_name=$1
   sample_name=$2
   input_file=$3
   output_dir=$4
-  alignment_flag=$5 #for kallisto alignment flag set to FALSE else set to TRUE
+  alignment_flag=$5 #for kallisto alignment flag set to false else set to true
   alignment_tool=$6
   quant_tool=$7
+  echo "7"
+  echo "$quant_tool"
   echo "running pipeline with arguments   $study_name $sample_name $output_dir $alignment_flag $alignment_tool $quant_tool"
-else 
-  echo "set all the required arguments"
-fi
-
-if [ ! -d "$output_dir/$study_name/$sample_name" ]; then
-	mkdir -p $output_dir/$study_name/$sample_name
-fi
-date
-
-if [ ${input_file: -4} == ".bam" ]; then
+  
+  if [ ${input_file: -4} == ".bam" ]; then
 	echo "Running picard"
 	
   module load picard  
@@ -64,20 +62,30 @@ if [ ${input_file: -4} == ".bam" ]; then
   
   first_fastq=$output_dir/$study_name/$sample_name/$sample_name_1.fastq
   second_fastq=$output_dir/$study_name/$sample_name/$sample_name_2.fastq
-  fastq_rm=TRUE
+  fastq_rm=true
+  fi
+  
+  if [ ${input_file: -4} == ".sra" ]; then
+    echo"Running fastq-dump"
+    
+  	fastq-dump \
+  	--split-files $inpute_file \
+  	--outdir $output_dir/$study_name/$sample_name/
+  	
+    first_fastq=$output_dir/$study_name/$sample_name/$sample_name_1.fastq
+    second_fastq=$output_dir/$study_name/$sample_name/$sample_name_2.fastq
+    fastq_rm=true
+  fi
+
+else 
+  echo "set all the required arguments"
 fi
 
-if [ ${input_file: -4} == ".sra" ]; then
-  echo"Running fastq-dump"
-  
-	fastq-dump \
-	--split-files $inpute_file \
-	--outdir $output_dir/$study_name/$sample_name/
-	
-  first_fastq=$output_dir/$study_name/$sample_name/$sample_name_1.fastq
-  second_fastq=$output_dir/$study_name/$sample_name/$sample_name_2.fastq
-  fastq_rm=TRUE
+if [ ! -d "$output_dir/$study_name/$sample_name" ]; then
+	mkdir -p $output_dir/$study_name/$sample_name
 fi
+date
+
 
 date
 if $alignment_flag; then
@@ -103,7 +111,7 @@ if $alignment_flag; then
     
   # sh ./star_indexing $star_index $annotation $read_length
     sh ./star.sh $star_index $first_fastq $second_fastq $output_dir/$study_name/$sample_name
-  elif [ $alignment_tool == "TOPHAT" ]; then
+  else #[ $alignment_tool == "TOPHAT" ]; then
     echo "Running tophat"
 
     module load igenome-human/GRCh37
@@ -116,16 +124,23 @@ if $alignment_flag; then
     --GTF $annotation \
     --transcriptome-index $output_dir/$study_name/$sample_name/annotation 
     mv $output_dir/$study_name/$sample_name/accepted_hits.bam $output_dir/$study_name/$sample_name/aligned_out_sorted.bam
+  fi
+fi
+echo "qq"
+date
+echo "rr"
+echo "$quant_tool"
+if [ $quant_tool == "KALLISTO" ]; then
+  echo "Running kallisto"
 fi
 
-date
 if [ $quant_tool == "KALLISTO" ]; then
   echo "Running kallisto"
 
   module load kallisto/0.43.1
   kallisto quant \
   -t 8 \
-  -i  \
+  -i $kallisto_index \
   -o $output_dir/$study_name/$sample_name \
   $first_fastq $second_fastq
 elif [ $quant_tool == "SALMON" ]; then
@@ -158,16 +173,17 @@ elif [ $quant_tool == "CUFFLINKS" ]; then
     -p 8 \
     -G $GTF \
     -o $output_dir/$study_name/$sample_name
-  fi
 fi
 date
 
-if $fastq_rm; then
-	rm $first_fastq
-	rm $second_fastq
+if [ $# -eq 8 ]; then
+  if $fastq_rm; then
+  	rm $first_fastq
+  	rm $second_fastq
+  fi
 fi
 date
-echon "COMPLETE"
+echo "COMPLETE"
 
 #stringtie $output_dir/$study_name/$sample_name/Aligned.out.sorted.bam -v -o $output_dir/$study_name/$sample_name/ballgown/stringtie_output.gtf -e -B -p 8 -G $HOME/Genome/GRCh38/Gencode/gencode.v26.annotation.gtf
 #stringtie $output_dir/$study_name/$sample_name/Aligned.out.sorted.bam -v -o $output_dir/$study_name/$sample_name/test/stringtie_output.gtf -p 8 -G $HOME/Genome/GRCh38/Gencode/gencode.v26.annotation.gtf
