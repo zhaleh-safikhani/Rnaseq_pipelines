@@ -176,7 +176,7 @@ elif [ $quant_tool == "CUFFLINKS" ]; then
 fi
 date
 
-if [ $# -eq 8 ]; then
+if [ $# -eq 7 ]; then
   if $fastq_rm; then
   	rm $first_fastq
   	rm $second_fastq
